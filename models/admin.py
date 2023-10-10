@@ -4,7 +4,7 @@ from common.Date import DateHelper
 class Admin(db.Model):
     __tablename__ = "admin"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True, index=True)
+    name = db.Column(db.String(64), index=True)
     password = db.Column(db.String(64))
     type = db.Column(db.Integer)
     status = db.Column(db.Integer)

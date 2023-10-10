@@ -59,7 +59,7 @@ def del_image_path(path):
         os.remove(img_path)
 
 
-def save_qr_code(code, userId):
+def save_qr_code(code, userId, platform):
     current_path = os.path.dirname(os.path.abspath(__file__))
     ROOT_DIR = os.path.abspath(os.path.join(current_path, '..'))
     img_path = ROOT_DIR + '/upload/user/code/' + str(userId)
@@ -67,7 +67,7 @@ def save_qr_code(code, userId):
     if not os.path.exists(img_path):
         os.makedirs(img_path)
 
-    img_path = img_path + '/code.png'
+    img_path = img_path + '/code_'+ platform +'.png'
 
     if not os.path.exists(img_path):
         with open(img_path, "wb") as fh:

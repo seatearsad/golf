@@ -1,4 +1,6 @@
 import datetime
+import random
+import string
 
 from models import db, base as DB
 from sqlalchemy import ForeignKey
@@ -10,7 +12,7 @@ from common.Date import DateHelper
 class Orders(db.Model):
     __tablename__ = "orders"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    orderNo = db.Column(db.String(20), unique=True, index=True, nullable=True, default='')
+    orderNo = db.Column(db.String(30), unique=True, index=True, nullable=True, default='')
     userId = db.Column(db.Integer, ForeignKey('users.id'), index=True)
     storeId = db.Column(db.Integer, ForeignKey('store.id'), index=True)
     courseId = db.Column(db.Integer, ForeignKey('course.id'), index=True)
@@ -30,19 +32,25 @@ class Orders(db.Model):
     course = relationship('Course')
 
     def __repr__(self):
-        data = dict(id=self.id, orderNo=self.orderNo, userId=self.userId, storeId=self.storeId, courseId=self.courseId,
+        data = dict(id=self.id, orderNo=self.orderNo, userId=self.userId, storeId=self.storeId,
+                    storeName=self.store.name, courseId=self.courseId,
                     reservation_date=str(self.reservation_date), reservation_time=str(self.reservation_time),
-                    member=self.member, car= self.car, caddie=self.caddie, coach=self.coach,
+                    member=self.member, car=self.car, caddie=self.caddie, coach=self.coach,
                     price=str(self.price), create_time=str(self.create_time), pay_time=str(self.pay_time),
                     status=self.status)
         return json.dumps(data)
 
+    @staticmethod
     def insertData(data: dict):
-        currData = Orders(userId=data.get('userId'), storeId=data.get('storeId'), courseId=data.get('courseId'),
+        currTime = DateHelper.date_string()
+        orderNo = Orders.getOrderNo(currTime)
+
+        currData = Orders(userId=data.get('userId'), orderNo=orderNo, storeId=data.get('storeId'),
+                          courseId=data.get('courseId'),
                           reservation_date=data.get('date'), reservation_time=data.get('time'),
                           member=data.get('member'), car=data.get('car'), caddie=data.get('caddie'),
-                          coach=data.get('coach'), price=data.get('price'), create_time=DateHelper.date_string(),
-                          pay_time=DateHelper.date_string(), status=data.get('status'))
+                          coach=data.get('coach'), price=data.get('price'), create_time=currTime,
+                          pay_time=currTime, status=data.get('status'))
         db.session.add(currData)
         db.session.flush()
         orderId = currData.id
@@ -50,10 +58,12 @@ class Orders(db.Model):
         order = Orders.getOrderById(orderId)
         return order
 
+    @staticmethod
     def getOrderById(orderId):
         order: Orders = Orders.query.filter_by(id=orderId).first()
         return order
 
+    @staticmethod
     def getList(id, index, size):
         if id != '' and id != '0' and id != 0:
             filter_str = (Orders.id == id)
@@ -67,28 +77,34 @@ class Orders(db.Model):
 
         newList = []
         for order in list:
-            newOrder = Orders.handleStore(order)
+            newOrder = Orders.handleOrder(order)
             newList.append(newOrder)
 
         return dict(list=newList, allNum=allNum)
 
-    def getOrderByUser(userId, index, size):
-        filter_str = (Orders.userId == userId)
+    @staticmethod
+    def getOrderByUser(userId, status, index, size):
+        filter_arr = {Orders.userId == userId}
+        if int(status) != 0:
+            filter_arr.add(Orders.status == status)
 
-        dt: dict = DB.getList(Orders, filter_str, index, size)
+        dt: dict = DB.getList(Orders, *filter_arr, index, size)
 
         list = dt.get('list')
         allNum = dt.get('allNum')
 
         newList = []
         for order in list:
-            newOrder = Orders.handleStore(order)
+            newOrder = Orders.handleOrder(order)
             newList.append(newOrder)
 
         return dict(list=newList, allNum=allNum)
-    def handleStore(order):
+
+    @staticmethod
+    def handleOrder(order):
         return dict(id=order.id, orderNo=order.orderNo,
                     storeId=order.storeId, storeName=order.store.name, storeType=order.store.type,
+                    storeLogo=order.store.logo,
                     userId=order.userId, userName=order.user.username,
                     courseId=order.courseId, courseName=order.course.name,
                     courseUnit=order.course.unit, courseUnitVol=order.course.unit_vol,
@@ -96,3 +112,32 @@ class Orders(db.Model):
                     member=order.member, car=order.car, caddie=order.caddie,
                     coach=order.coach, price=str(order.price), create_time=str(order.create_time),
                     pay_time=str(order.pay_time), status=order.status)
+
+    @staticmethod
+    def getAllNumByStatus(status=1):
+        if status == -1:
+            filterStr = 1 == 1
+        else:
+            filterStr = Orders.status == status
+
+        allNum = DB.getAllNum(Orders, filterStr)
+        return allNum
+
+    @staticmethod
+    def getOrderByNo(orderNo):
+        order: Orders = Orders.query.filter_by(orderNo=orderNo).first()
+        return order
+
+    @staticmethod
+    def getOrderNo(currTime):
+        random_string = ''
+        for i in range(8):
+            random_string += random.choice(string.digits)
+
+        orderNo = currTime.replace('-', '').replace(':', '').replace(' ', '')[2:] + random_string
+
+        order = Orders.getOrderByNo(orderNo)
+        if not order is None:
+            orderNo = Orders.getOrderNo(currTime)
+
+        return orderNo

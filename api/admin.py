@@ -1,10 +1,12 @@
 from models.admin import Admin, db
+from models.store import Store
+from models.user import User
+from models.orders import Orders
 from common import md5
 from api.api import Api
 import string
 import random
 from common.Date import DateHelper
-from sqlalchemy import func
 import json
 
 
@@ -48,6 +50,11 @@ class AdminAdmin(Api):
                         currData.status = userData.get('status')
                     db.session.commit()
                     currAdmin = []
+                case 'mainData':
+                    userNum = User.getAllNumByStatus()
+                    orderNum = Orders.getAllNumByStatus(-1)
+                    storeNum = Store.getAllNumByStatus()
+                    currAdmin = dict(userNum=userNum, storeNum=storeNum, orderNum=orderNum)
                 case _:
                     currAdmin = None
 

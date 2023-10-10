@@ -1,7 +1,6 @@
 from common.Date import DateHelper
-from flask import Flask, jsonify, request, Response
+from flask import jsonify, request
 from api import *
-import os
 
 
 @app.route('/')
@@ -50,6 +49,8 @@ def api_port(apiName):
             currClass = store.StoreApi(request_data.get("action"))
         case 'orders':
             currClass = orders.OrdersApi(request_data.get('action'))
+        case 'adapay_callback':
+            currClass = adapay_callback.Adapay_callback()
         case _:
             currClass = None
 

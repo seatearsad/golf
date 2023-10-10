@@ -12,4 +12,4 @@ def after_request(resp):
 
 app.after_request(after_request)
 
-__all__ = ['app', 'user', 'admin', 'store', 'orders']
+__all__ = ['app', 'user', 'admin', 'store', 'orders', 'adapay_callback']

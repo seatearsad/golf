@@ -37,6 +37,8 @@ class StoreApi(Api):
                     storeType = data.get('type')
                     cityId = data.get('cityId')
                     currData = Store.getListOrderByDistance(keyword, index, size, lat, lng, storeType, cityId)
+                case 'getStoreListByCity':
+                    currData = Store.getAllListByCity()
                 case _:
                     currData = None
 

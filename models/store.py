@@ -1,14 +1,12 @@
 from models import db, base as DB
-from sqlalchemy.orm import sessionmaker, relationship
 from models.course import Course
 from sqlalchemy import func
-import json
 
 
 class Store(db.Model):
     __tablename__ = "store"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(200), unique=True, index=True)
+    name = db.Column(db.String(200), index=True)
     city_id = db.Column(db.Integer, default=0)
     type = db.Column(db.Integer)
     address = db.Column(db.String(200), nullable=True, default='')
@@ -76,7 +74,7 @@ class Store(db.Model):
             images = []
         return dict(id=store.id, name=store.name, type=store.type, city=city, address=store.address, lng=str(store.lng),
                     lat=str(store.lat), phone=store.phone, intro=store.intro, logo=store.logo, designer=store.designer,
-                    status=store.status,images=images, course=eval(str(store.course)))
+                    status=store.status, images=images, course=eval(str(store.course)))
 
     def getListOrderByDistance(keyword, index, size, lat=0, lng=0, storeType=-1, city=''):
         filter_arr = {Store.status == 1}
@@ -97,7 +95,8 @@ class Store(db.Model):
                 func.radians(Store.lng) - (func.radians(loc_longitude)))) * 6371
 
         newList = []
-        for row, distance in db.session.query(Store, re.label('distance')).order_by(re.asc()).filter(*filter_arr).limit(size).offset(
+        for row, distance in db.session.query(Store, re.label('distance')).order_by(re.asc()).filter(*filter_arr).limit(
+                size).offset(
                 (int(index) - 1) * int(size)):
             store = Store.handleStore(row)
             store['distance'] = round(distance)
@@ -106,3 +105,29 @@ class Store(db.Model):
         allNum = db.session.query(func.count(Store.id)).filter(*filter_arr).scalar()
 
         return dict(list=newList, allNum=allNum)
+
+    def getAllNumByStatus(status=1):
+        filterStr = Store.status == status
+        allNum = DB.getAllNum(Store, filterStr)
+        return allNum
+
+    def getAllListByCity(status=1):
+        list = Store.query.filter_by(status=status).all()
+
+        newList = []
+        for store in list:
+            cityStr = str(store.city_id)
+            city = cityStr[:4]
+            newStore = dict(id=store.id, city=city, name=store.name)
+            newList.append(newStore)
+
+        return newList
+
+    def handleStoreNameById(ids):
+        list = [];
+        for id in ids:
+            store = Store.getStoreById(id)
+            storeValue = dict(id=store.id, storeName=store.name)
+            list.append(storeValue)
+
+        return list

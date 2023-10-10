@@ -1,5 +1,7 @@
 from models.orders import Orders
+from models.user import User
 from api.api import Api
+from common.payment import Adapay
 import json
 
 class OrdersApi(Api):
@@ -20,7 +22,21 @@ class OrdersApi(Api):
                     userId = data.get('userId')
                     index = data.get('page')
                     size = data.get('pageSize')
-                    currData = Orders.getOrderByUser(userId, index, size)
+                    status = data.get('status')
+                    currData = Orders.getOrderByUser(userId, status, index, size)
+                case 'getOrderById':
+                    userId = data.get('userId')
+                    orderId = data.get('orderId')
+                    order = Orders.getOrderById(orderId)
+                    currData = eval(str(order))
+                case 'createPay':
+                    userId = data.get('userId')
+                    orderId = data.get('orderId')
+                    order = Orders.getOrderById(orderId)
+                    user = User.getUserById(userId)
+                    adapay = Adapay()
+                    adapay.createOrder(order.orderNo, user.openid)
+                    currData = None
                 case _:
                     currData = None
 

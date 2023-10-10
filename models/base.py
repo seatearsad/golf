@@ -24,3 +24,9 @@ def getList(currClass, filter_str, index, size):
         list = currClass.query.order_by(currClass.id.desc()).limit(size).offset((int(index) - 1) * int(size))
 
     return dict(list=list, allNum=allNum)
+
+
+def getAllNum(currClass, filter_str):
+    allNum = db.session.query(func.count(currClass.id)).filter(filter_str).scalar()
+
+    return allNum
