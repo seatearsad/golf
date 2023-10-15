@@ -33,6 +33,6 @@ class DateHelper:
         elif 60 <= differNum < 1440:
             timeDesc = str(round(differNum/60)) + '小时前'
         elif differNum >= 1440:
-            timeDesc = str(round(differNum / 24*60)) + '天前'
+            timeDesc = str(round(differNum / (24*60))) + '天前'
 
         return timeDesc

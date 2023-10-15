@@ -27,6 +27,6 @@ def getList(currClass, filter_str, index, size):
 
 
 def getAllNum(currClass, filter_str):
-    allNum = db.session.query(func.count(currClass.id)).filter(filter_str).scalar()
+    allNum = db.session.query(func.count(currClass.id)).filter(*filter_str).scalar()
 
     return allNum

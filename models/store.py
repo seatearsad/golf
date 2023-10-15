@@ -106,11 +106,13 @@ class Store(db.Model):
 
         return dict(list=newList, allNum=allNum)
 
+    @staticmethod
     def getAllNumByStatus(status=1):
-        filterStr = Store.status == status
+        filterStr = {Store.status == status}
         allNum = DB.getAllNum(Store, filterStr)
         return allNum
 
+    @staticmethod
     def getAllListByCity(status=1):
         list = Store.query.filter_by(status=status).all()
 
@@ -123,6 +125,7 @@ class Store(db.Model):
 
         return newList
 
+    @staticmethod
     def handleStoreNameById(ids):
         list = [];
         for id in ids:

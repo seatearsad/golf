@@ -24,7 +24,7 @@ class Member_order(db.Model):
 
     def __repr__(self):
         data = dict(id=self.id, orderNo=self.orderNo, userId=self.userId, level=self.level,
-                    price=self.price, createTime=self.createTime, payTime=self.payTime, status=self.status)
+                    price=str(self.price), createTime=str(self.createTime), payTime=str(self.payTime), status=self.status)
         return json.dumps(data)
 
     @staticmethod
@@ -44,6 +44,11 @@ class Member_order(db.Model):
     @staticmethod
     def getOrderById(orderId):
         order: Member_order = Member_order.query.filter_by(id=orderId).first()
+        return order
+
+    @staticmethod
+    def getOrderByOrderNo(orderNo):
+        order: Member_order = Member_order.query.filter_by(orderNo=orderNo).first()
         return order
 
     @staticmethod

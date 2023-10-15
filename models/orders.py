@@ -2,9 +2,11 @@ import datetime
 import random
 import string
 
+from sqlalchemy import func
 from models import db, base as DB
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+from models.store import Store
 import json
 from common.Date import DateHelper
 
@@ -64,6 +66,11 @@ class Orders(db.Model):
         return order
 
     @staticmethod
+    def getOrderByOrderNo(orderNo):
+        order: Orders = Orders.query.filter_by(orderNo=orderNo).first()
+        return order
+
+    @staticmethod
     def getList(id, index, size):
         if id != '' and id != '0' and id != 0:
             filter_str = (Orders.id == id)
@@ -83,15 +90,15 @@ class Orders(db.Model):
         return dict(list=newList, allNum=allNum)
 
     @staticmethod
-    def getOrderByUser(userId, status, index, size):
+    def getOrderByUser(userId, status, index, size, storeType):
         filter_arr = {Orders.userId == userId}
         if int(status) != 0:
             filter_arr.add(Orders.status == status)
+        if int(storeType) != -1:
+            filter_arr.add(Store.type == storeType)
 
-        dt: dict = DB.getList(Orders, *filter_arr, index, size)
-
-        list = dt.get('list')
-        allNum = dt.get('allNum')
+        allNum = db.session.query(func.count(Orders.id)).join(Store, Orders.storeId == Store.id).filter(*filter_arr).scalar()
+        list = db.session.query(Orders).order_by(Orders.id.desc()).join(Store, Orders.storeId == Store.id).filter(*filter_arr).limit(size).offset((int(index) - 1) * int(size))
 
         newList = []
         for order in list:
@@ -116,9 +123,9 @@ class Orders(db.Model):
     @staticmethod
     def getAllNumByStatus(status=1):
         if status == -1:
-            filterStr = 1 == 1
+            filterStr = {1 == 1}
         else:
-            filterStr = Orders.status == status
+            filterStr = {Orders.status == status}
 
         allNum = DB.getAllNum(Orders, filterStr)
         return allNum

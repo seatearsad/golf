@@ -39,3 +39,9 @@ class Adapay:
         print(response)
 
         return response
+
+    def checkSign(self, data, sign):
+        # public_key = Config.getValueByName('adapay_public_key')
+        result = self.adapay.AdapayTools.verify_sign(data, sign)
+
+        return result

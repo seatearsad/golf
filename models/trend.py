@@ -62,6 +62,6 @@ class Trend(db.Model):
 
         time = DateHelper.time_differ(trend.date)
 
-        return dict(id=trend.id, name=trend.user.username, icon=trend.user.avatar, time=time,
-                    content=trend.content, images=images, commend=eval(str(trend.commend)), comment=eval(str(trend.comment)),
-                    date=str(trend.date), status=trend.status)
+        return dict(id=trend.id, userId=trend.userId, name=trend.user.username, icon=trend.user.avatar, time=time,
+                    content=trend.content, images=images, commend=eval(str(trend.commend)),
+                    comment=eval(str(trend.comment)), date=str(trend.date), status=trend.status)

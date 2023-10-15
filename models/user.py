@@ -2,6 +2,7 @@ from models import db, base as DB
 from common.Date import DateHelper
 import random
 import string
+import datetime
 
 
 class User(db.Model):
@@ -18,6 +19,8 @@ class User(db.Model):
     level = db.Column(db.Integer, default=0)  # 0未选择 1经销商 2会员
     status = db.Column(db.Integer, default=0)
     phone = db.Column(db.String(64), default='')
+    balance = db.Column(db.DECIMAL(10, 2), default=0)
+    create_time = db.Column(db.DateTime, default=datetime.datetime.now())
     login_time = db.Column(db.Integer, nullable=True, default=0)
     parentId = db.Column(db.Integer, nullable=True, default=0)
     invite_code = db.Column(db.String(10), default='', index=True)
@@ -90,8 +93,8 @@ class User(db.Model):
         allNum = dt.get('allNum')
 
         newList = []
-        for store in list:
-            newUser = User.handleUser(store)
+        for user in list:
+            newUser = User.handleUser(user)
             newList.append(newUser)
 
         return dict(list=newList, allNum=allNum)
@@ -99,14 +102,71 @@ class User(db.Model):
     @staticmethod
     def handleUser(user):
         return dict(id=user.id, username=user.username, type=user.type, level=user.level, avatar=user.avatar, phone=user.phone,
-                    status=user.status, gender=user.gender, login_time=DateHelper.date_string(user.login_time),
-                    invite_code=user.invite_code)
+                    status=user.status, gender=user.gender, invite_code=user.invite_code ,
+                    create_time=str(user.create_time), login_time=DateHelper.date_string(user.login_time))
 
     @staticmethod
     def getAllNumByStatus(status=1):
-        filterStr = User.status == status
+        filterStr = {User.status == status}
         allNum = DB.getAllNum(User, filterStr)
         return allNum
+
+    @staticmethod
+    def getChildrenByUserId(userId):
+        filterStr = {User.parentId == userId}
+        filterStr.add(User.status == 1)
+        childrenNum = DB.getAllNum(User, filterStr)
+
+        return childrenNum
+
+    @staticmethod
+    def getUsersByFriends(friendList):
+        friends = User.query.filter(User.id.in_(friendList)).all()
+        newList = []
+        for user in friends:
+            newUser = User.handleUser(user)
+            newList.append(newUser)
+
+        return newList
+
+    @staticmethod
+    def getFindUserByPhone(userId, phone, friends):
+        userList = User.query.filter(User.phone == phone).all()
+
+        newList = []
+        for user in userList:
+            newUser = User.handleUser(user)
+            print(user.id)
+            if user.id != int(userId):
+                if user.id in friends:
+                    newUser['isFriend'] = 1
+                else:
+                    newUser['isFriend'] = 0
+                newList.append(newUser)
+
+        return newList
+
+    @staticmethod
+    def getMemberListByUserId(userId):
+        filterStr = {User.parentId == userId}
+        filterStr.add(User.status == 1)
+
+        allNum = DB.getAllNum(User, filterStr)
+        allList = User.query.filter(*filterStr).all()
+
+        inactive = []
+        agent = []
+        member = []
+
+        for user in allList:
+            if user.level == 0:
+                inactive.append(User.handleUser(user))
+            elif user.level == 1:
+                agent.append(User.handleUser(user))
+            else:
+                member.append(User.handleUser(user))
+
+        return dict(num=allNum, inactive=inactive, agent=agent, member=member)
 
     @staticmethod
     def generateCode(length):
