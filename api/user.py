@@ -15,6 +15,8 @@ from models.member_order import Member_order
 from models.adapay_record import Adapay_record
 from models.record import Record
 from models.user import User, db
+from models.game import Game
+from models.game_score import Game_score
 from common.payment import Adapay
 
 
@@ -117,7 +119,8 @@ class UserApi(Api):
                 userId = data.get('userId')
                 friendList = Friends.getFriendList(userId)
                 friends = User.getUsersByFriends(friendList)
-                currData = friends
+                game = Game.getGameByUser(userId)
+                currData = dict(friends=friends, game=eval(str(game)))
             case 'searchUserByPhone':
                 userId = data.get('userId')
                 phone = data.get('phone')
@@ -216,6 +219,42 @@ class UserApi(Api):
             case 'getMemberList':
                 userId = data.get('userId')
                 currData = User.getMemberListByUserId(userId)
+            case 'beginGame':
+                userId = data.get('userId')
+                saveData = json.loads(data.get('data'))
+                game = Game.insert_data(saveData, userId)
+                scores = Game_score.insert_data(game.id, saveData.get('userList'))
+                currData = eval(str(scores))
+            case 'getGameByUser':
+                userId = data.get('userId')
+                score = Game.getGameByUser(userId)
+                game = Game.getGameById(score[0].game_id)
+                currData = eval(str(game))
+            case 'saveGameScore':
+                userId = data.get('userId')
+                gameId = data.get('gameId')
+                saveData = json.loads(data.get('data'))
+                Game_score.saveGameScore(userId, gameId, saveData)
+                game = Game.getGameById(gameId)
+                currData = eval(str(game))
+            case 'endGame':
+                userId = data.get('userId')
+                gameId = data.get('gameId')
+                saveData = json.loads(data.get('data'))
+                Game_score.saveGameScore(userId, gameId, saveData)
+                Game.endGame(gameId)
+                game = Game.getGameById(gameId)
+                currData = eval(str(game))
+            case 'getGameListByUser':
+                userId = data.get('userId')
+                index = data.get('page')
+                size = data.get('pageSize')
+                currData = Game.getGameListByUser(userId, index, size)
+            case 'getGameDetail':
+                userId = data.get('userId')
+                gameId = data.get('gameId')
+                game = Game.getGameById(gameId)
+                currData = eval(str(game))
             case _:
                 currData = None
 
