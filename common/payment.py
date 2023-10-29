@@ -33,7 +33,7 @@ class Adapay:
             mer_key='merchant_key',
             device_info={'device_ip': '0.0.0.0'},
             expend={'open_id': openid},
-            notify_url='http://58.87.70.236/api/adapay_callback'
+            notify_url='https://yititong.work/api/adapay_callback'
         )
 
         print(response)
